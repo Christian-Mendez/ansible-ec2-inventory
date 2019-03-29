@@ -232,6 +232,8 @@ DEFAULTS = {
     'route53': 'False',
     'route53_excluded_zones': '',
     'route53_hostnames': '',
+    'ssh_key_path': '~/.ssh',
+    'ssh_key_suffix': '.pem',
     'stack_filters': 'False',
     'vpc_destination_variable': 'ip_address'
 }
@@ -433,6 +435,9 @@ class Ec2Inventory(object):
         self.boto_profile = self.args.boto_profile or \
             os.environ.get('AWS_PROFILE') or \
             config.get('ec2', 'boto_profile')
+        # SSH key setup
+        self.ssh_key_path = os.path.expanduser(config.get('ssh', 'ssh_key_path'))
+        self.ssh_key_suffix = config.get('ssh', 'ssh_key_suffix')
 
         # AWS credentials (prefer environment variables)
         if not (self.boto_profile or os.environ.get('AWS_ACCESS_KEY_ID') or
@@ -1538,6 +1543,7 @@ class Ec2Inventory(object):
                 # print value
 
         instance_vars[self.to_safe('ec2_account_id')] = self.aws_account_id
+        instance_vars["ansible_ssh_private_key_file"] = os.path.join(self.ssh_key_path, instance_vars["ec2_key_name"] + self.ssh_key_suffix)
 
         return instance_vars
 
